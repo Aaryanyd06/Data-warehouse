@@ -1,82 +1,63 @@
-create or alter procedure bronze.load_bronze as
-begin
-	begin try
-truncate table bronze.crm_cust_info;
-bulk insert bronze.crm_cust_info
-from 'A:\SQL_Project\sql-data-warehouse-project\datasets\source_crm\cust_info.csv'
-with (
-	firstrow = 2,
-	fieldterminator = ',',
-	tablock
+if object_id ('bronze.crm_cust_info', 'U') is not null
+	drop table bronze.crm_cust_info
+create table bronze.crm_cust_info (
+	cst_id int,
+	cst_key nvarchar(50),
+	cst_firstname nvarchar(50),
+	cst_lastname nvarchar(50),
+	cst_material_status nvarchar(50),
+	cst_gndr nvarchar(50),
+	cst_create_date date
 );
--- select * from bronze.crm_cust_info;
 
-
-
-truncate table bronze.crm_prd_info;
-bulk insert bronze.crm_prd_info
-from 'A:\SQL_Project\sql-data-warehouse-project\datasets\source_crm\prd_info.csv'
-with (
-	firstrow = 2,
-	fieldterminator = ',',
-	tablock
+if object_id ('bronze.crm_prd_info', 'U') is not null
+	drop table bronze.crm_prd_info
+create table bronze.crm_prd_info (
+	prd_id int,
+	prd_key nvarchar(50),
+	prd_nm nvarchar(50),
+	prd_cost int,
+	cst_line nvarchar(50),
+	cst_start_dt datetime,
+	cst_end_dt datetime
 );
--- select * from bronze.crm_prd_info;
 
+if object_id ('bronze.crm_sales_details', 'U') is not null
+	drop table bronze.crm_sales_details
+create table bronze.crm_sales_details (
+	sls_ord_num nvarchar(50),
+	sls_prd_key nvarchar(50),
+	sls_cust_id int,
+	sls_order_dt int,
+	sls_ship_dt int,
+	sls_due_dt int,
+	sls_sales int,
+	sls_quantity int,
+	sls_price int
+	);
 
-
-
-truncate table bronze.crm_sales_details;
-bulk insert bronze.crm_sales_details
-from 'A:\SQL_Project\sql-data-warehouse-project\datasets\source_crm\sales_details.csv'
-with (
-	firstrow = 2,
-	fieldterminator = ',',
-	tablock
+if object_id ('bronze.erp_loc_a101', 'U') is not null
+	drop table bronze.erp_loc_a101
+create table bronze.erp_loc_a101(
+	cid nvarchar(50),
+	cntry nvarchar(50)
 );
--- select * from bronze.crm_sales_details;
 
 
-
-truncate table bronze.erp_loc_a101;
-bulk insert bronze.erp_loc_a101
-from 'A:\SQL_Project\sql-data-warehouse-project\datasets\source_erp\LOC_A101.csv'
-with (
-	firstrow = 2,
-	fieldterminator = ',',
-	tablock
+if object_id ('bronze.erp_cust_az12', 'U') is not null
+	drop table bronze.erp_cust_az12
+create table bronze.erp_cust_az12(
+	cid nvarchar(50),
+	bdate date,
+	gen nvarchar(50)
 );
--- select * from bronze.erp_loc_a101;
 
 
-
-
-truncate table bronze.erp_cust_az12;
-bulk insert bronze.erp_cust_az12
-from 'A:\SQL_Project\sql-data-warehouse-project\datasets\source_erp\CUST_AZ12.csv'
-with (
-	firstrow = 2,
-	fieldterminator = ',',
-	tablock
+if object_id ('bronze.erp_px_cat_g1v2', 'U') is not null
+	drop table bronze.erp_px_cat_g1v2
+create table bronze.erp_px_cat_g1v2(
+	id nvarchar(50),
+	cat nvarchar(50),
+	subcat nvarchar(50),
+	maintenance nvarchar(50)
 );
--- select * from bronze.erp_cust_az12;
-
-
-
-
-truncate table bronze.erp_px_cat_g1v2;
-bulk insert bronze.erp_px_cat_g1v2
-from 'A:\SQL_Project\sql-data-warehouse-project\datasets\source_erp\PX_CAT_G1V2.csv'
-with (
-	firstrow = 2,
-	fieldterminator = ',',
-	tablock
-);
--- select * from bronze.erp_px_cat_g1v2;
-	end try
-	begin catch
-		print 'Error during loading of data'
-		print 'Error message' + error_message()
-	end catch
-end
-

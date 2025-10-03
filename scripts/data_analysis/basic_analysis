@@ -1,0 +1,156 @@
+use datawarehouse;
+go;
+
+select * from INFORMATION_SCHEMA.TABLES;
+
+select * from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = 'dim_customers'; 
+
+select distinct country from gold.dim_customers;
+
+select distinct category, subcategory, product_name from gold.dim_products;
+
+select min(birthdate), max(birthdate) from gold.dim_customers;
+
+----------------------------------------------------------------------------------
+
+-- total sales
+select sum(sales_amount) as total_sales from gold.fact_sales
+
+-- number of items sold
+select sum(quantity) as total_quantity from gold.fact_sales;
+
+--average selling
+select avg(price) as avg_price from gold.fact_sales
+
+-- total numeber of orders
+select count(distinct order_number) as total_orders from gold.fact_sales
+
+-- total number of products
+select count(distinct product_name) as total_orders from gold.dim_products;
+
+-- total number of customers
+select count(customer_key) from gold.dim_customers
+
+-- total number of customers that placed an order
+select count(distinct customer_key) as total_customers from gold.fact_sales
+
+----------------------------------------------------------------------------------
+
+-- total customer by countries
+select country, count(customer_key) as total_customers from gold.dim_customers
+group by country
+order by total_customers desc
+
+-- total customer by gender
+select gender, count(customer_key) as total_customers from gold.dim_customers
+group by gender
+order by total_customers desc
+
+-- total products by category
+select category, count(*) as total_products 
+from gold.dim_products
+group by category
+order by total_products desc
+ 
+-- average cost in each category
+select category, avg(product_cast) as avg_cost 
+from gold.dim_products
+group by category
+order by avg_cost desc
+
+-- total revenue for each category
+select sum(f.sales_amount) as total_revenue, p.category 
+from gold.fact_sales f left join gold.dim_products p
+on p.product_key = f.product_key
+group by p.category
+order by total_revenue desc
+
+-- total revenue by each customer
+SELECT c.customer_key, c.first_name, c.last_name, 
+SUM(f.sales_amount) AS total_revenue
+FROM gold.fact_sales f
+LEFT JOIN gold.dim_customers c
+ON c.customer_key = f.customer_key
+GROUP BY c.customer_key, c.first_name, c.last_name
+ORDER BY total_revenue DESC;
+
+
+-- distribution of sold items across countries
+SELECT
+    c.country,
+    SUM(f.quantity) AS total_sold_items
+FROM gold.fact_sales f
+LEFT JOIN gold.dim_customers c
+    ON c.customer_key = f.customer_key
+GROUP BY c.country
+ORDER BY total_sold_items DESC;
+
+----------------------------------------------------------------------------------
+
+
+-- top 5 products Generating the Highest Revenue
+
+SELECT TOP 5
+    p.product_name,
+    SUM(f.sales_amount) AS total_revenue
+FROM gold.fact_sales f
+LEFT JOIN gold.dim_products p
+    ON p.product_key = f.product_key
+GROUP BY p.product_name
+ORDER BY total_revenue DESC;
+
+
+SELECT *
+FROM (
+    SELECT
+        p.product_name,
+        SUM(f.sales_amount) AS total_revenue,
+        RANK() OVER (ORDER BY SUM(f.sales_amount) DESC) AS rank_products
+    FROM gold.fact_sales f
+    LEFT JOIN gold.dim_products p
+        ON p.product_key = f.product_key
+    GROUP BY p.product_name
+) AS t
+WHERE rank_products <= 5;
+
+-- 5 worst-performing products in terms of sales
+SELECT TOP 5
+    p.product_name,
+    SUM(f.sales_amount) AS total_revenue
+FROM gold.fact_sales f
+LEFT JOIN gold.dim_products p
+    ON p.product_key = f.product_key
+GROUP BY p.product_name
+ORDER BY total_revenue;
+
+
+-- top 10 customers who have generated the highest revenue
+SELECT TOP 10
+    c.customer_key,
+    c.first_name,
+    c.last_name,
+    SUM(f.sales_amount) AS total_revenue
+FROM gold.fact_sales f
+LEFT JOIN gold.dim_customers c
+    ON c.customer_key = f.customer_key
+GROUP BY 
+    c.customer_key,
+    c.first_name,
+    c.last_name
+ORDER BY total_revenue DESC;
+
+-- The 3 customers with the fewest orders placed
+
+SELECT TOP 3
+    c.customer_key,
+    c.first_name,
+    c.last_name,
+    COUNT(DISTINCT order_number) AS total_orders
+FROM gold.fact_sales f
+LEFT JOIN gold.dim_customers c
+    ON c.customer_key = f.customer_key
+GROUP BY 
+    c.customer_key, 
+    c.first_name,
+    c.last_name
+ORDER BY total_orders ;
